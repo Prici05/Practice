@@ -1,4 +1,5 @@
 package com.example;
+
 import java.util.Arrays;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -49,7 +50,6 @@ public class ProvarExcel {
                             .toArray(String[]::new);
 
                     System.out.println(finalHeaders);
-
                 }
 
                 Row headingrow = sourceSheet.getRow(4);
@@ -106,6 +106,29 @@ public class ProvarExcel {
                             newCell = newrow.createCell(masterModulesColumnIndex);
                         }
                         newCell.setCellValue(moduleinput);
+
+                        // Check if the current module is "Preheader"
+                        if ("Preheader".equalsIgnoreCase(moduleinput)) {
+                            // Add "ps" to the same row
+                            Cell elementsCell = newrow.createCell(masterElementsColumnIndex);
+                            elementsCell.setCellValue("ps");
+
+                            // Add additional rows for "ssl" and "vo"
+                            for (int i = 1; i <= 2; i++) {
+                                Row newElementRow = sheet.createRow(newrowindex + i);
+                                Cell masterModuleCell = newElementRow.createCell(masterModulesColumnIndex);
+                                masterModuleCell.setCellValue(""); // Empty Master_Modules cell
+
+                                Cell elementCell = newElementRow.createCell(masterElementsColumnIndex);
+                                if (i == 1) {
+                                    elementCell.setCellValue("ssl");
+                                } else if (i == 2) {
+                                    elementCell.setCellValue("vo");
+                                }
+                            }
+                            newrowindex += 2; // Increment the new row index to account for added rows
+                        }
+
                         newrowindex++;
                     }
 
