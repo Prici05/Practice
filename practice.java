@@ -123,17 +123,13 @@ public class ProvarExcel {
                                 if (currentRow != null) {
                                     Cell cell = currentRow.getCell(masterModulesColumnIndex);
                                     if (cell != null && cell.getStringCellValue().equalsIgnoreCase("Preheader")) {
-                                        int insertRowIndex = rowIndex + 1;
-                                        String[] newValues = {"ps", "ssl", "vo"};
-
-                                        for (int i = 0; i < newValues.length; i++) {
-                                            sheet.shiftRows(insertRowIndex, sheet.getLastRowNum(), 1); // Shift rows
-                                            Row newRow = sheet.createRow(insertRowIndex);
-                                            Cell newCell = newRow.createCell(masterElementsColumnIndex);
-                                            newCell.setCellValue(newValues[i]);
-                                            insertRowIndex++;
+                                        // Add "ps" in the same row as "Preheader"
+                                        Cell newElementCell = currentRow.getCell(masterElementsColumnIndex);
+                                        if (newElementCell == null) {
+                                            newElementCell = currentRow.createCell(masterElementsColumnIndex);
                                         }
-                                        break;
+                                        newElementCell.setCellValue("ps");
+                                        break; // Exit the loop after inserting "ps"
                                     }
                                 }
                             }
