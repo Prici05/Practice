@@ -1,4 +1,4 @@
-package com.example;
+ package com.example;
 import java.util.Arrays;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -28,7 +28,7 @@ public class ProvarExcel {
         Sheet sheet = workbook.createSheet("Sheet1");
 
         Row row = sheet.createRow(0);
-        String[] headers = {"Master_Modules", "Module_Background_Color", "Master_Elements"};
+        String[] headers = {"Master_Modules", "Module_Background_Color", "Master_Elements", "SG_EN Content"};
 
         try (FileInputStream fis = new FileInputStream(sourceFilePath)) {
             Workbook sourceWorkbook = new XSSFWorkbook(fis);
@@ -85,11 +85,14 @@ public class ProvarExcel {
                 Row newexcetrow = sheet.getRow(0);
                 int masterModulesColumnIndex = -1;
                 int sgEnContentColumnIndex = -1;
+                int masterElementsColumnIndex = -1;
 
-                // Find "Master_Modules" and "SG_EN Content" column indices
+                // Find "Master_Modules", "Master_Elements", and "SG_EN Content" column indices
                 for (Cell cell : newexcetrow) {
                     if (cell.getStringCellValue().equalsIgnoreCase("Master_Modules")) {
                         masterModulesColumnIndex = cell.getColumnIndex();
+                    } else if (cell.getStringCellValue().equalsIgnoreCase("Master_Elements")) {
+                        masterElementsColumnIndex = cell.getColumnIndex();
                     } else if (cell.getStringCellValue().equalsIgnoreCase("SG_EN Content")) {
                         sgEnContentColumnIndex = cell.getColumnIndex();
                     }
@@ -109,44 +112,61 @@ public class ProvarExcel {
                         newrowindex++;
                     }
 
-                    // Handle Preheader row to fetch value from Email 1 sheet and update SG_EN Content for "ssl"
-                    int masterElementsColumnIndex = -1;
-
-                    // Find "Master_Elements" column index
-                    for (Cell cell : newexcetrow) {
-                        if (cell.getStringCellValue().equalsIgnoreCase("Master_Elements")) {
-                            masterElementsColumnIndex = cell.getColumnIndex();
-                            break;
+                    // Requirement 1: Add rows below "Preheader" in Master_Elements
+                    int preheaderRowIndex = -1;
+                    for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                        Row currentRow = sheet.getRow(rowIndex);
+                        if (currentRow != null) {
+                            Cell cell = currentRow.getCell(masterModulesColumnIndex);
+                            if (cell != null && cell.getStringCellValue().equalsIgnoreCase("Preheader")) {
+                                preheaderRowIndex = rowIndex;
+                                Cell preheaderCell = currentRow.createCell(masterElementsColumnIndex);
+                                preheaderCell.setCellValue("ps");
+                                break;
+                            }
                         }
                     }
 
-                    if (masterModulesColumnIndex != -1 && masterElementsColumnIndex != -1) {
-                        String preheaderValueForSG_EN = null;
+                    if (preheaderRowIndex != -1) {
+                        // Insert "ssl" and "vo" rows below the "Preheader" row
+                        Row sslRow = sheet.createRow(preheaderRowIndex + 1);
+                        Cell sslModuleCell = sslRow.createCell(masterModulesColumnIndex);
+                        sslModuleCell.setCellValue("ssl");
+                        Cell sslElementCell = sslRow.createCell(masterElementsColumnIndex);
+                        sslElementCell.setCellValue("ssl");
 
-                        // Locate "Preheader" in source sheet and fetch value from column E (index 4)
-                        for (int rowIndex = 1; rowIndex <= sourceSheet.getLastRowNum(); rowIndex++) {
-                            Row currentRow = sourceSheet.getRow(rowIndex);
-                            if (currentRow != null) {
-                                Cell cell = currentRow.getCell(reqcolindex);
-                                if (cell != null && cell.getStringCellValue().equalsIgnoreCase("Preheader")) {
-                                    preheaderValueForSG_EN = currentRow.getCell(4).getStringCellValue();
-                                    break;
-                                }
+                        Row voRow = sheet.createRow(preheaderRowIndex + 2);
+                        Cell voModuleCell = voRow.createCell(masterModulesColumnIndex);
+                        voModuleCell.setCellValue("vo");
+                        Cell voElementCell = voRow.createCell(masterElementsColumnIndex);
+                        voElementCell.setCellValue("vo");
+                    }
+
+                    // Requirement 2: Fetch the value from column E for "Preheader" in EMAIL 1 and update SG_EN Content for "ssl"
+                    String preheaderValueForSG_EN = null;
+
+                    // Locate "Preheader" in source sheet and fetch value from column E (index 4)
+                    for (int rowIndex = 1; rowIndex <= sourceSheet.getLastRowNum(); rowIndex++) {
+                        Row currentRow = sourceSheet.getRow(rowIndex);
+                        if (currentRow != null) {
+                            Cell cell = currentRow.getCell(reqcolindex);
+                            if (cell != null && cell.getStringCellValue().equalsIgnoreCase("Preheader")) {
+                                preheaderValueForSG_EN = currentRow.getCell(4).getStringCellValue();
+                                break;
                             }
                         }
+                    }
 
-                        // Now add the value to SG_EN Content for "ssl" in Sheet1
-                        if (preheaderValueForSG_EN != null) {
-                            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-                                Row currentRow = sheet.getRow(rowIndex);
-                                if (currentRow != null) {
-                                    Cell cell = currentRow.getCell(masterModulesColumnIndex);
-                                    if (cell != null && cell.getStringCellValue().equalsIgnoreCase("ssl")) {
-                                        // Add fetched value to SG_EN Content column for "ssl" row
-                                        Cell sgEnCell = currentRow.createCell(sgEnContentColumnIndex);
-                                        sgEnCell.setCellValue(preheaderValueForSG_EN);
-                                        break;
-                                    }
+                    // Add the fetched value to SG_EN Content column for the "ssl" row
+                    if (preheaderValueForSG_EN != null) {
+                        for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                            Row currentRow = sheet.getRow(rowIndex);
+                            if (currentRow != null) {
+                                Cell cell = currentRow.getCell(masterModulesColumnIndex);
+                                if (cell != null && cell.getStringCellValue().equalsIgnoreCase("ssl")) {
+                                    Cell sgEnCell = currentRow.createCell(sgEnContentColumnIndex);
+                                    sgEnCell.setCellValue(preheaderValueForSG_EN);
+                                    break;
                                 }
                             }
                         }
