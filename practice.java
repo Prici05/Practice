@@ -129,7 +129,18 @@ public class ProvarExcel {
                                             newElementCell = currentRow.createCell(masterElementsColumnIndex);
                                         }
                                         newElementCell.setCellValue("ps");
-                                        break; // Exit the loop after inserting "ps"
+
+                                        // Insert new rows for "ssl" and "vo"
+                                        String[] newValues = {"ssl", "vo"};
+                                        int insertRowIndex = rowIndex + 1; // Start inserting after the current row
+                                        for (String newValue : newValues) {
+                                            sheet.shiftRows(insertRowIndex, sheet.getLastRowNum(), 1); // Shift rows
+                                            Row newRow = sheet.createRow(insertRowIndex);
+                                            Cell newCell = newRow.createCell(masterElementsColumnIndex);
+                                            newCell.setCellValue(newValue);
+                                            insertRowIndex++;
+                                        }
+                                        break; // Exit after processing "Preheader"
                                     }
                                 }
                             }
